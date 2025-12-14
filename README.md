@@ -34,12 +34,21 @@ go mod download
 
 ## Configuration
 
-Create a `.env` file:
+Create a `.env` file (use `.env.example` as template):
 
 ```env
 DB_URL=postgresql://username:password@localhost:5432/pulsecheck?sslmode=disable
 CHECKER_SERVICE_URL=localhost:50052
+OTLP_ENDPOINT=localhost:4317
 ```
+
+### Environment Variables
+
+| Variable | Description | Default | Required |
+|----------|-------------|---------|----------|
+| `DB_URL` | PostgreSQL connection string | - | ✅ |
+| `CHECKER_SERVICE_URL` | Address of checkerd service | - | ✅ |
+| `OTLP_ENDPOINT` | OpenTelemetry collector endpoint | `localhost:4317` | ❌ |
 
 ## Running the Service
 
@@ -103,4 +112,36 @@ grpcurl -plaintext \
   -proto=pulse-check-apis/monitor/v1/monitor.proto \
   localhost:50051 \
   monitor.v1.MonitorService/GetMonitor
+```
+
+## Observability
+
+### OpenTelemetry Tracing
+
+The service exports distributed traces to an OTLP collector. Traces include:
+
+- **gRPC Server Spans** - Automatic instrumentation of all RPC calls
+- **CreateMonitor Operations** - Manual spans with attributes:
+  - `monitor.url` - URL being monitored
+  - `monitor.interval_seconds` - Check interval
+  - `monitor.id` - Created monitor ID
+- **gRPC Client Spans** - Outgoing calls to checkerd service
+- **Error Recording** - Automatic error capture and tagging
+
+### Running with Jaeger
+
+```bash
+# Start Jaeger all-in-one
+docker run -d --name jaeger \
+  -p 4317:4317 \
+  -p 16686:16686 \
+  jaegertracing/all-in-one:latest
+
+# Set OTLP endpoint
+export OTLP_ENDPOINT=localhost:4317
+
+# Run service
+go run main.go
+
+# View traces at http://localhost:16686
 ```
