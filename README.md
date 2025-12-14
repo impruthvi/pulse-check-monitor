@@ -16,7 +16,7 @@ The Monitor Service manages URL monitoring configurations and coordinates with t
 
 ## Prerequisites
 
-- Go 1.23+
+- Go 1.25+
 - PostgreSQL database
 - [pulse-check-apis](https://github.com/impruthvi/pulse-check-apis)
 - [checkerd](https://github.com/impruthvi/pulse-check-checker) running
